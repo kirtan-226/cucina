@@ -1,27 +1,49 @@
 import React, { useState } from 'react';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Login = ({ onLoginSuccess }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
 
-    const handleLogin = () => {
+    const handleLogin = async () => {
+        console.log('2');
+
         if (username === 'admin' && password === 'password') {
             alert('Login successful!');
             onLoginSuccess();
             navigate('/');
         } else {
-            alert('Invalid username or password!');
+            try {
+                const response = await axios.post('http://localhost:5000/api/login', {
+                    username,
+                    password
+                });
+                console.log('Response:', response.data);
+                alert('Login details saved successfully!');
+            } catch (error) {
+                console.error('Error saving login details:', error);
+                alert('Failed to save login details!');
+            }
         }
     };
     
-    const handleGoogleLoginSuccess = (response) => {
+    const handleGoogleLoginSuccess = async (response) => {
         console.log('Google login response:', response);
-        alert('Google login successful!');
-        onLoginSuccess();
-        navigate('/');
+        try {
+            const backendResponse = await axios.post('http://localhost:5000/api/google-login', {
+                token: response.credential,
+            });
+            console.log('Backend response:', backendResponse.data);
+            alert('Google login successful!');
+            onLoginSuccess();
+            navigate('/');
+        } catch (error) {
+            console.error('Error posting Google login details:', error);
+            alert('Failed to log in with Google!');
+        }
     };
 
     return (

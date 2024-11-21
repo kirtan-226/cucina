@@ -1,12 +1,16 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const loginRoutes = require('./server/login');
+
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+app.use('/api', loginRoutes);
 
-// Sample orders endpoint
+app.post('/api/google-login',)
+
 app.post('/api/orders', (req, res) => {
     const order = req.body;
     console.log('Order Received:', order);
