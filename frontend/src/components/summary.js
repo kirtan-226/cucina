@@ -1,27 +1,19 @@
-import React from 'react';
+import React from "react";
 
-const Summary = ({ order, submitOrder, removeItem }) => {
-    return (
-        <div className="summary">
-            <h2>Order Summary</h2>
-            <ul>
-                {order.map((item, index) => (
-                    <li key={index}>
-                        {item.item} - {JSON.stringify(item)}{' '}
-                        <button
-                            onClick={() => removeItem(index)}
-                            className="remove-button"
-                        >
-                            Remove
-                        </button>
-                    </li>
-                ))}
-            </ul>
-            <button onClick={submitOrder} className="submit-button">
-                Place Order
-            </button>
+const summary = ({ components, deleteComponent }) => {
+  return (
+    <div>
+      <h2>Order Summary</h2>
+      {components.map((comp, idx) => (
+        <div key={idx}>
+          <p>
+            {comp.temp && `${comp.temp} `} {comp.item} ({comp.method})
+          </p>
+          <button onClick={() => deleteComponent(idx)}>Delete</button>
         </div>
-    );
+      ))}
+    </div>
+  );
 };
 
-export default Summary;
+export default summary;
