@@ -16,18 +16,47 @@ router.post('/google-login', async (req, res) => {
         });
         const payload = ticket.getPayload();
         const { sub: googleId, email, name } = payload;
-        const query = `
-            INSERT INTO google_logins (google_id, email, name) 
-            VALUES (?, ?, ?)
-            ON DUPLICATE KEY UPDATE email = VALUES(email), name = VALUES(name)
-        `;
 
-        db.query(query, [googleId, email, name], (err, result) => {
-            if (err) {
-                console.error('Error inserting Google login data:', err);
-                return res.status(500).json({ error: 'Failed to save Google login details' });
+        // Check if the email already exists in the database
+        const checkQuery = 'SELECT * FROM google_logins WHERE email = ?';
+        db.query(checkQuery, [email], (checkErr, result) => {
+            if (checkErr) {
+                console.error('Error checking email existence:', checkErr);
+                return res.status(500).json({ error: 'Database error' });
             }
-            res.status(200).json({ message: 'Login successful!', user: { googleId, email, name } });
+
+            if (result.length > 0) {
+                const updateQuery = `
+                    UPDATE google_logins 
+                    SET last_activity = NOW() 
+                    WHERE email = ?
+                `;
+                db.query(updateQuery, [email], (updateErr) => {
+                    if (updateErr) {
+                        console.error('Error updating last_activity:', updateErr);
+                        return res.status(500).json({ error: 'Failed to update last activity' });
+                    }
+                    return res.status(200).json({ 
+                        message: 'Login successful, last activity updated!',
+                        user: { googleId, email, name } 
+                    });
+                });
+            } else {
+                const insertQuery = `
+                    INSERT INTO google_logins (google_id, email, name, last_activity) 
+                    VALUES (?, ?, ?, NOW())
+                `;
+                db.query(insertQuery, [googleId, email, name], (insertErr) => {
+                    if (insertErr) {
+                        console.error('Error inserting Google login data:', insertErr);
+                        return res.status(500).json({ error: 'Failed to save Google login details' });
+                    }
+                    res.status(200).json({ 
+                        message: 'Login successful!',
+                        user: { googleId, email, name } 
+                    });
+                });
+            }
         });
     } catch (error) {
         console.error('Error verifying Google token:', error);
